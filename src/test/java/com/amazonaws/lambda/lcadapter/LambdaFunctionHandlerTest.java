@@ -8,7 +8,7 @@ import java.io.UnsupportedEncodingException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.amazonaws.lambda.lcadapter.functions.CheckForLCVendorUpdates;
+import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
 import com.amazonaws.lambda.lcadapter.functions.CheckForNewVendors;
 import com.amazonaws.lambda.lcadapter.lcclient.AttributeBean;
 import com.amazonaws.lambda.lcadapter.lcclient.InputStreamWrapper;
@@ -46,7 +46,7 @@ public class LambdaFunctionHandlerTest {
     @Test
     public void testLambdaFunctionHandler2() {
 
-        CheckForLCVendorUpdates handler = new CheckForLCVendorUpdates();
+        LCVendorAdapter handler = new LCVendorAdapter();
         Context ctx = createContext();
 
         String output = handler.handleRequest(input, ctx);

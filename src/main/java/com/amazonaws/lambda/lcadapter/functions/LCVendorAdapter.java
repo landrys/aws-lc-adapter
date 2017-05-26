@@ -16,7 +16,7 @@ import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
 
-public class CheckForLCVendorUpdates implements RequestHandler<String, String>
+public class LCVendorAdapter implements RequestHandler<String, String>
 {
 
 	public static final DynamoVendorShipTimeDAO vstDao = DynamoVendorShipTimeDAO.instance();

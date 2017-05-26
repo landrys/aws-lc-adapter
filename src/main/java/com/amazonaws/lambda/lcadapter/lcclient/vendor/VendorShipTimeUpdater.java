@@ -3,7 +3,7 @@ package com.amazonaws.lambda.lcadapter.lcclient.vendor;
 import java.util.Iterator;
 import java.util.List;
 
-import com.amazonaws.lambda.lcadapter.functions.CheckForLCVendorUpdates;
+import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTime;
 
 public class VendorShipTimeUpdater
@@ -22,7 +22,7 @@ public class VendorShipTimeUpdater
 			Boolean archived = v.getArchived();
 			if (archived == null || !archived)
 			{
-				List<VendorShipTime> vsts = CheckForLCVendorUpdates.vstDao.findByVendorId(vendorId);
+				List<VendorShipTime> vsts = LCVendorAdapter.vstDao.findByVendorId(vendorId);
 				if (!vsts.isEmpty())
 				{
 					System.out.println("Found " + vsts.size() + " vendor ship times to check for changes.");
@@ -30,7 +30,7 @@ public class VendorShipTimeUpdater
 						for (VendorShipTime vst : vsts)
 						{
 							vst.setName(v.getName());
-							CheckForLCVendorUpdates.vstDao.write(vst);
+							LCVendorAdapter.vstDao.write(vst);
 							System.out.println("Changed vendor ship time entry to: " + vst);
 						}
 					else
@@ -49,7 +49,7 @@ public class VendorShipTimeUpdater
 					vst.setIsBike(false);
 					vst.setWeeklyOrder(false);
 					vst.setDropShipToStore(false);
-					CheckForLCVendorUpdates.vstDao.write(vst);
+					LCVendorAdapter.vstDao.write(vst);
 					System.out.println("Created vendor ship time entry " + vst);
 					nextVendorShipTimeId++;
 				}
@@ -58,12 +58,12 @@ public class VendorShipTimeUpdater
 			else
 			{
 				System.out.println("Vendor " + v.getName() + " has been archived.");
-				List<VendorShipTime> vsts = CheckForLCVendorUpdates.vstDao.findByVendorId(vendorId);
+				List<VendorShipTime> vsts = LCVendorAdapter.vstDao.findByVendorId(vendorId);
 				System.out.println("There are " + vsts.size() + " vendor ship times entries to delete.");
 				if (!vsts.isEmpty())
 					for (VendorShipTime vst : vsts)
 					{
-						CheckForLCVendorUpdates.vstDao.delete(vst);
+						LCVendorAdapter.vstDao.delete(vst);
 						System.out.println("Deleted vendor ship time entry " + vst);
 					}
 			}
