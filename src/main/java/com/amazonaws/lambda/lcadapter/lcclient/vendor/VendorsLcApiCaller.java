@@ -1,7 +1,5 @@
 package com.amazonaws.lambda.lcadapter.lcclient.vendor;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 

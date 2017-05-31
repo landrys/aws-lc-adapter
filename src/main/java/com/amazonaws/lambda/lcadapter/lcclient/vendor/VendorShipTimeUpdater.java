@@ -74,10 +74,13 @@ public class VendorShipTimeUpdater
 
 	private boolean changed( VendorShipTime vendorShipTime, String name )
 	{
-		if (vendorShipTime.getName().equalsIgnoreCase(name))
+		if (vendorShipTime.getName().equalsIgnoreCase(name)) {
 			return false;
-		else
+		} else {
+			System.out.println("Name change [from:to]:[" 
+		            + vendorShipTime.getName() + ":" + name + "]");
 			return true;
+		}
 	}
 
 	public static class Builder

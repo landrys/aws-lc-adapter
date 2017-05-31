@@ -3,13 +3,10 @@ package com.amazonaws.lambda.lcadapter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
-import com.amazonaws.lambda.lcadapter.functions.CheckForNewVendors;
 import com.amazonaws.lambda.lcadapter.lcclient.AttributeBean;
 import com.amazonaws.lambda.lcadapter.lcclient.InputStreamWrapper;
 import com.amazonaws.lambda.lcadapter.lcclient.LcApi;
@@ -18,6 +15,7 @@ import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorsBean;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
 
 /**
@@ -25,7 +23,7 @@ import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
  */
 public class LambdaFunctionHandlerTest {
 
-    private static String input;
+    private static LCVendorAdapterInput input;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeClass
@@ -57,18 +55,6 @@ public class LambdaFunctionHandlerTest {
 
     }
 
-    @Test
-    public void testLambdaFunctionHandler() {
-        CheckForNewVendors handler = new CheckForNewVendors();
-        Context ctx = createContext();
-
-        String output = handler.handleRequest(input, ctx);
-
-        // TODO: validate output here if needed.
-        if (output != null) {
-            System.out.println(output.toString());
-        }
-    }
     @Test
 	public void testLcApiMap() throws Exception, Exception
 	{

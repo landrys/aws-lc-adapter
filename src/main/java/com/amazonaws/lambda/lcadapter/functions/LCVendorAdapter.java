@@ -4,34 +4,35 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-
 import com.amazonaws.lambda.lcadapter.lcclient.LcApiCaller;
 import com.amazonaws.lambda.lcadapter.lcclient.vendor.Vendor;
 import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorShipTimeUpdater;
 import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorsLcApiCaller;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
 
-public class LCVendorAdapter implements RequestHandler<String, String>
+public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, String>
 {
 
 	public static final DynamoVendorShipTimeDAO vstDao = DynamoVendorShipTimeDAO.instance();
 	private static final DynamoVendorShipTimeSupportDAO vstsDao = DynamoVendorShipTimeSupportDAO.instance();
 
 	@Override
-	public String handleRequest( String lastGetGiven, Context context )
+	public String handleRequest( LCVendorAdapterInput input, Context context )
 	{
 
-		context.getLogger().log("In with given lastGet(Can be empty string) of: " + lastGetGiven);
+		context.getLogger().log("In with given input: " + input);
+		if ( input != null && input.getPing() != null )
+			return null;
 
 	    VendorShipTimeSupport maxData = getSupportInfo(VendorShipTimeSupport.MAX_DATA_SUPPORT);
 	    VendorShipTimeSupport lastGet = getSupportInfo(VendorShipTimeSupport.LAST_GET_SUPPORT);
-	    if ( lastGetGiven != null && isValid(lastGetGiven) )
-	    	lastGet.setTimestamp(lastGetGiven);
+	    if ( input.getLastGet() != null && isValid(input.getLastGet()) )
+	    	lastGet.setTimestamp(input.getLastGet());
 
 
 		// First the the current time
@@ -45,9 +46,9 @@ public class LCVendorAdapter implements RequestHandler<String, String>
 		{
 			// Get all Vendors Changed since last time we called
 			LcApiCaller<Vendor> lcApiCaller = new VendorsLcApiCaller.Builder()
-					//.query("Vendor?timeStamp=>," + lastGet.getTimestamp() + "&archived=1")
+					.query("Vendor?timeStamp=>," + lastGet.getTimestamp() + "&archived=1")
 					// .query("Vendor?archived=1")
-					 .query("Vendor?vendorID=1382")
+					 //.query("Vendor?vendorID=1382")
 					.build();
 			List<Vendor> vendors = lcApiCaller.get(null); // offset of null to get all available
 

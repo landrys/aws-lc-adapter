@@ -18,7 +18,7 @@ import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
 import com.landry.aws.lambda.dynamo.invoker.GentVendorShipTimeSupportsInvoker;
 import com.landry.aws.lambda.dynamo.invoker.WriteVendorShipTimeInvoker;
 
-// OBSOLETE USING UPDATER
+// OBSOLETE USING ADAPTER
 public class CheckForNewVendors implements RequestHandler<String, String> {
 
 	private static final DynamoVendorShipTimeDAO vstDao = DynamoVendorShipTimeDAO.instance();
