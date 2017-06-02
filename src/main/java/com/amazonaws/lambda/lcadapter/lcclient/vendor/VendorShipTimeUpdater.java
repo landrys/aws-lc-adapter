@@ -10,6 +10,7 @@ public class VendorShipTimeUpdater
 {
 	private List<Vendor> vendors;
 	private Long nextVendorShipTimeId;
+	private boolean persistedChanges = false;
 
 	public void doWork()
 	{
@@ -79,6 +80,7 @@ public class VendorShipTimeUpdater
 		} else {
 			System.out.println("Name change [from:to]:[" 
 		            + vendorShipTime.getName() + ":" + name + "]");
+			this.persistedChanges = true;
 			return true;
 		}
 	}
@@ -111,4 +113,10 @@ public class VendorShipTimeUpdater
 		this.vendors = builder.vendors;
 		this.nextVendorShipTimeId = builder.nextVendorShipTimeId;
 	}
+
+	public boolean persistedChanges()
+	{
+		return persistedChanges;
+	}
+
 }

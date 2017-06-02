@@ -8,8 +8,12 @@ import com.amazonaws.lambda.lcadapter.lcclient.LcApiCaller;
 import com.amazonaws.lambda.lcadapter.lcclient.vendor.Vendor;
 import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorShipTimeUpdater;
 import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorsLcApiCaller;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.invoke.LambdaInvokerFactory;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.landry.aws.lambda.common.invoker.DueDateInvoker;
+import com.landry.aws.lambda.common.model.DueDateInput;
 import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
@@ -70,11 +74,21 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 						.nextVendorShipTimeId(nextVSTId)
 						.build();
 				vstu.doWork();
+				if ( vstu.persistedChanges() )
+					reloadVSTs();
 			}
 		}
 
 		return "done";
 
+	}
+
+	private void reloadVSTs()
+	{
+		DueDateInvoker dueDateInvoker = LambdaInvokerFactory.builder()
+				.lambdaClient(AWSLambdaClientBuilder.defaultClient()).build(DueDateInvoker.class);
+		DueDateInput ddi = new DueDateInput.Builder().reload(true).build();
+		dueDateInvoker.dueDate(ddi);
 	}
 
 	private boolean isValid( String lastGetGiven )
