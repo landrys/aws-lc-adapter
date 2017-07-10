@@ -3,8 +3,9 @@ package com.landry.aws.lambda.lcadapter.lcclient.vendor;
 import java.util.Iterator;
 import java.util.List;
 
-import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTime;
+import com.landry.aws.lambda.lcadapter.functions.LCVendorAdapter;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

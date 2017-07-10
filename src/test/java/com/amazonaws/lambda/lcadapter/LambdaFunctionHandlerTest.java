@@ -6,7 +6,6 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
@@ -14,6 +13,7 @@ import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTime;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
+import com.landry.aws.lambda.lcadapter.functions.LCVendorAdapter;
 import com.landry.aws.lambda.lcadapter.lcclient.LcProxyCaller;
 import com.landry.aws.lambda.lcadapter.lcclient.vendor.Vendor;
 import com.landry.aws.lambda.lcadapter.lcclient.vendor.VendorsCaller;

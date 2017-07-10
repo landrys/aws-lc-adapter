@@ -1,4 +1,4 @@
-package com.amazonaws.lambda.lcadapter.functions;
+package com.landry.aws.lambda.lcadapter.functions;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
