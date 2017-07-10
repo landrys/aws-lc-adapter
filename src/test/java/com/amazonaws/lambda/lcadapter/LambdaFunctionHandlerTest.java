@@ -1,22 +1,22 @@
 package com.amazonaws.lambda.lcadapter;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
-import com.amazonaws.lambda.lcadapter.lcclient.AttributeBean;
-import com.amazonaws.lambda.lcadapter.lcclient.InputStreamWrapper;
-import com.amazonaws.lambda.lcadapter.lcclient.LcApi;
-import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorBean;
-import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorsBean;
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
+import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
+import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
+import com.landry.aws.lambda.dynamo.domain.VendorShipTime;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
+import com.landry.aws.lambda.lcadapter.lcclient.LcProxyCaller;
+import com.landry.aws.lambda.lcadapter.lcclient.vendor.Vendor;
+import com.landry.aws.lambda.lcadapter.lcclient.vendor.VendorsCaller;
 
 /**
  * A simple test harness for locally invoking your Lambda function handler.
@@ -25,21 +25,32 @@ public class LambdaFunctionHandlerTest {
 
     private static LCVendorAdapterInput input;
     private ObjectMapper objectMapper = new ObjectMapper();
+    private static final DynamoVendorShipTimeSupportDAO vstsDao = DynamoVendorShipTimeSupportDAO.instance();
+    private static final DynamoVendorShipTimeDAO vstDao = DynamoVendorShipTimeDAO.instance();
 
     @BeforeClass
     public static void createString() throws IOException {
         // TODO: set up your sample input object here.
-        input = null;
+        input = new LCVendorAdapterInput();
     }
 
     private Context createContext() {
         TestContext ctx = new TestContext();
-
         // TODO: customize your context here if needed.
         ctx.setFunctionName("Your Function Name");
-
         return ctx;
     }
+
+	@Test
+	public void testLocalDb()
+	{
+		List<VendorShipTimeSupport> vendorShipTimeSupport = vstsDao.findAll();
+		for ( VendorShipTimeSupport vsts : vendorShipTimeSupport )
+			System.out.println(vsts);
+		List<VendorShipTime> vendorShipTime = vstDao.findAll();
+		for ( VendorShipTime vst : vendorShipTime )
+			System.out.println(vst);
+	}
 
     @Test
     public void testLambdaFunctionHandler2() {
@@ -55,63 +66,24 @@ public class LambdaFunctionHandlerTest {
 
     }
 
-    @Test
-	public void testLcApiMap() throws Exception, Exception
+@Test
+	public void testLcApiVendorCaller() throws Exception, Exception
 	{
-		LcApi lcAPI = new LcApi();
-		InputStreamWrapper result = lcAPI.getInputStreamSynchronized("Vendor.json?limit=1", "GET", null);
-		//outputRaw(result);
 
-		VendorBean vb;
-		VendorsBean vsb;
-		try
-		{
-			vsb = objectMapper.readValue(result.getIs(), VendorsBean.class);
-    		System.out.println(vsb.toString());
-		}
-		catch (JsonMappingException e)
-		{
-		    result = lcAPI.getInputStreamSynchronized("Vendor.json?vendorID=>,1400", "GET", null);
-			vb = objectMapper.readValue(result.getIs(), VendorBean.class);
-    		System.out.println(vb.getAttribute().toString());
-    		//System.out.println(vb.toString());
-		}
-		
-	}
-
-    @Test
-    public void testLcApi() throws Exception, Exception {
-		LcApi lcAPI = new LcApi();
-		InputStreamWrapper result = lcAPI.getInputStreamSynchronized("/Vendor.json?limit=2", "GET", null);
-		outputRaw(result);
-	}
-    private void outputRaw( InputStreamWrapper result ) throws IOException
-	{
-		BufferedReader r = new BufferedReader(new InputStreamReader(result.getIs(), "UTF-8"));
-	    String line = null;
-	    while ((line = r.readLine()) != null) {
-	        System.out.println(line);
-	    }
-	}
-
-	@Test
-    public void testLcApiAttributes() throws Exception {
-		LcApi lcAPI = new LcApi();
-		InputStreamWrapper result = lcAPI.getInputStreamSynchronized("/Vendor.json?limit=2", "GET", null);
-		AttributeBean vb = objectMapper.readValue(result.getIs(), AttributeBean.class);
-		System.out.println(vb.toString());
+		LcProxyCaller<Vendor> lcApiCaller = new VendorsCaller.Builder()
+				.query("Vendor?archived=1")
+				// .query("Vendor?archived=1")
+				// .query("Vendor?vendorID=1382")
+				.build();
+		List<Vendor> vendors = lcApiCaller.get(null); // offset of null to get
+														// all available
+		System.out.println(vendors.size());
 	}
 	
 	@Test
 	public void outputJson() throws Exception {
 		VendorShipTimeSupport vsts = new VendorShipTimeSupport();
 		System.out.println(objectMapper.writeValueAsString(vsts));
-		
-		
-		
 	}
-
-
-
 
 }

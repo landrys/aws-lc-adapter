@@ -1,4 +1,4 @@
-package com.amazonaws.lambda.lcadapter.lcclient.vendor;
+package com.landry.aws.lambda.lcadapter.lcclient.vendor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

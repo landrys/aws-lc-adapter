@@ -1,13 +1,16 @@
-package com.amazonaws.lambda.lcadapter.lcclient.vendor;
+package com.landry.aws.lambda.lcadapter.lcclient.vendor;
 
 import java.util.Iterator;
 import java.util.List;
 
 import com.amazonaws.lambda.lcadapter.functions.LCVendorAdapter;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTime;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class VendorShipTimeUpdater
 {
+	private static final Log logger = LogFactory.getLog(VendorShipTimeUpdater.class);
 	private List<Vendor> vendors;
 	private Long nextVendorShipTimeId;
 	private boolean persistedChanges = false;
@@ -15,7 +18,7 @@ public class VendorShipTimeUpdater
 	public void doWork()
 	{
 		Iterator<Vendor> it = vendors.iterator();
-		System.out.println("Working on " + vendors.size() + " vendors...");
+		logger.info("Working on " + vendors.size() + " vendors...");
 		while (it.hasNext())
 		{
 			Vendor v = it.next();
@@ -26,46 +29,46 @@ public class VendorShipTimeUpdater
 				List<VendorShipTime> vsts = LCVendorAdapter.vstDao.findByVendorId(vendorId);
 				if (!vsts.isEmpty())
 				{
-					System.out.println("Found " + vsts.size() + " vendor ship times to check for changes.");
+					logger.info("Found " + vsts.size() + " vendor ship times to check for changes.");
 					if (changed(vsts.get(0), v.getName()))
 						for (VendorShipTime vst : vsts)
 						{
 							vst.setName(v.getName());
 							LCVendorAdapter.vstDao.write(vst);
-							System.out.println("Changed vendor ship time entry to: " + vst);
+							logger.info("Changed vendor ship time entry to: " + vst);
 						}
 					else
-						System.out.println("No changes to vendor detected.");
+						logger.info("No changes to vendor detected.");
 
 				}
 				else
 				{
 
-					System.out.println("Vendor " + v.getName() + " has no vendor ship time entry.");
+					logger.info("Vendor " + v.getName() + " has no vendor ship time entry.");
 					// Need to create a new one with defaults
 					VendorShipTime vst = new VendorShipTime();
 					vst.setId(nextVendorShipTimeId);
 					vst.setVendorId(v.getId());
-					vst.setName(v.getName());
+					vst.setName(v.getName()==null? "No Name Given":v.getName());
 					vst.setIsBike(false);
 					vst.setWeeklyOrder(false);
 					vst.setDropShipToStore(false);
 					LCVendorAdapter.vstDao.write(vst);
-					System.out.println("Created vendor ship time entry " + vst);
+					logger.info("Created vendor ship time entry " + vst);
 					nextVendorShipTimeId++;
 				}
 
 			}
 			else
 			{
-				System.out.println("Vendor " + v.getName() + " has been archived.");
+				logger.info("Vendor " + v.getName() + " has been archived.");
 				List<VendorShipTime> vsts = LCVendorAdapter.vstDao.findByVendorId(vendorId);
-				System.out.println("There are " + vsts.size() + " vendor ship times entries to delete.");
+				logger.info("There are " + vsts.size() + " vendor ship times entries to delete.");
 				if (!vsts.isEmpty())
 					for (VendorShipTime vst : vsts)
 					{
 						LCVendorAdapter.vstDao.delete(vst);
-						System.out.println("Deleted vendor ship time entry " + vst);
+						logger.info("Deleted vendor ship time entry " + vst);
 					}
 			}
 
@@ -75,11 +78,24 @@ public class VendorShipTimeUpdater
 
 	private boolean changed( VendorShipTime vendorShipTime, String name )
 	{
+		if (vendorShipTime.getName() == null)
+			return (doNullCheck(name));
+
 		if (vendorShipTime.getName().equalsIgnoreCase(name)) {
 			return false;
 		} else {
 			System.out.println("Name change [from:to]:[" 
 		            + vendorShipTime.getName() + ":" + name + "]");
+			this.persistedChanges = true;
+			return true;
+		}
+	}
+
+	private boolean doNullCheck( String name )
+	{
+		if (name == null) {
+			return false;
+		} else {
 			this.persistedChanges = true;
 			return true;
 		}

@@ -4,10 +4,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.List;
-import com.amazonaws.lambda.lcadapter.lcclient.LcApiCaller;
-import com.amazonaws.lambda.lcadapter.lcclient.vendor.Vendor;
-import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorShipTimeUpdater;
-import com.amazonaws.lambda.lcadapter.lcclient.vendor.VendorsLcApiCaller;
+
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.invoke.LambdaInvokerFactory;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -15,13 +12,24 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.landry.aws.lambda.common.invoker.DueDateInvoker;
 import com.landry.aws.lambda.common.model.DueDateInput;
 import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
+import com.landry.aws.lambda.common.util.LambdaFunctions;
+import com.landry.aws.lambda.common.util.MyConstants;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
+import com.landry.aws.lambda.lcadapter.lcclient.LcProxyCaller;
+import com.landry.aws.lambda.lcadapter.lcclient.vendor.Vendor;
+import com.landry.aws.lambda.lcadapter.lcclient.vendor.VendorShipTimeUpdater;
+import com.landry.aws.lambda.lcadapter.lcclient.vendor.VendorsCaller;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, String>
 {
 
+
+    private static final Log logger = LogFactory.getLog(LCVendorAdapter.class);
 	public static final DynamoVendorShipTimeDAO vstDao = DynamoVendorShipTimeDAO.instance();
 	private static final DynamoVendorShipTimeSupportDAO vstsDao = DynamoVendorShipTimeSupportDAO.instance();
 
@@ -29,7 +37,8 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 	public String handleRequest( LCVendorAdapterInput input, Context context )
 	{
 
-		context.getLogger().log("In with given input: " + input);
+        logger.info("Function: " + LambdaFunctions.LC_VENDOR_ADAPTER);
+		logger.info("In with given input: " + input);
 		if ( input != null && input.getPing() != null )
 			return null;
 
@@ -43,24 +52,22 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 		String currentTimeStampString = ZonedDateTime.now()
 				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX"));
 
-		context.getLogger().log("This is the last time we called LC: " + currentTimeStampString);
-
+		logger.debug("This is the last time we called LC: " + currentTimeStampString);
 
 		if (lastGet != null && maxData != null)
 		{
 			// Get all Vendors Changed since last time we called
-			LcApiCaller<Vendor> lcApiCaller = new VendorsLcApiCaller.Builder()
-					.query("Vendor?timeStamp=>," + lastGet.getTimestamp() + "&archived=1")
+			LcProxyCaller<Vendor> lcApiCaller = new VendorsCaller.Builder()
+					.query("Vendor.json?timeStamp=>," + lastGet.getTimestamp() + "&archived=1")
 					// .query("Vendor?archived=1")
 					 //.query("Vendor?vendorID=1382")
 					.build();
 			List<Vendor> vendors = lcApiCaller.get(null); // offset of null to get all available
 
-			context.getLogger().log("Got " + vendors.size() + " vendors that have changed.");
+			logger.info("Got " + vendors.size() + " vendors that have changed since"  + lastGet.getTimestamp());
 
 			// First lets persist the timestamp to be used in the next call to LC
-
-			context.getLogger().log("Persisting new timestamp: " + currentTimeStampString);
+			logger.debug("Persisting new timestamp: " + currentTimeStampString);
 			writeTimestampToDynamo(currentTimeStampString);
 
 			// Next lets see if we have anything new to update
@@ -68,18 +75,19 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 			{
 				Long nextVSTId = maxData.getId().longValue();
 				nextVSTId++;
-			    context.getLogger().log("The next vendor ship time id is: " + nextVSTId);
+			    logger.debug("The next vendor ship time id is: " + nextVSTId);
 				VendorShipTimeUpdater vstu = new VendorShipTimeUpdater.Builder()
 						.vendors(vendors)
 						.nextVendorShipTimeId(nextVSTId)
 						.build();
 				vstu.doWork();
-				if ( vstu.persistedChanges() )
-					reloadVSTs();
+				if (!MyConstants.TESTING)
+					if (vstu.persistedChanges())
+						reloadVSTs();
 			}
 		}
 
-		return "done";
+		return "Done syncing changes to the VendorShipTime table from LC Vendor table.";
 
 	}
 

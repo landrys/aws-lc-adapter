@@ -1,10 +1,10 @@
-package com.amazonaws.lambda.lcadapter.lcclient.vendor;
+package com.landry.aws.lambda.lcadapter.lcclient.vendor;
 
 import java.util.List;
 
-import com.amazonaws.lambda.lcadapter.lcclient.LCAttribute;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.landry.aws.lambda.lcadapter.lcclient.LCAttribute;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VendorsBean

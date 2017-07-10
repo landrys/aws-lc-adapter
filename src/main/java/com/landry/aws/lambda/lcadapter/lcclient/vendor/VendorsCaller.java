@@ -1,13 +1,13 @@
-package com.amazonaws.lambda.lcadapter.lcclient.vendor;
+package com.landry.aws.lambda.lcadapter.lcclient.vendor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.amazonaws.lambda.lcadapter.lcclient.InputStreamWrapper;
-import com.amazonaws.lambda.lcadapter.lcclient.LcApiCaller;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.landry.aws.lambda.lcadapter.lcclient.LcApiCaller;
+import com.landry.aws.lambda.lcadapter.lcclient.LcProxyCaller;
 
-public class VendorsLcApiCaller extends LcApiCaller<Vendor>
+public class VendorsCaller extends LcProxyCaller<Vendor>
 {
 	private String query;
 	private List<Vendor> vendors = new ArrayList<Vendor>();
@@ -25,21 +25,24 @@ public class VendorsLcApiCaller extends LcApiCaller<Vendor>
 				else
 					queryWithOffset = query + "?offset=" + offset;
 
-			InputStreamWrapper isw = lcApi.getInputStreamSynchronized(queryWithOffset, "GET");
+			LcApiCaller lcApiCaller = new LcApiCaller(queryWithOffset);
+			String result = lcApiCaller.get();
 
 			VendorsBean vsb;
 			VendorBean vb;
 
 			try
 			{
-				vsb = objectMapper.readValue(isw.getIs(), VendorsBean.class);
+				vsb = objectMapper.readValue(result, VendorsBean.class);
 				if (vsb.getAttribute().getCount() == 0)
 					return vendors;
 			}
-			catch (JsonMappingException e ) // Hack I need since LC calls a single value the same as an array!!!
+			catch (JsonMappingException e ) // Hack I need since LC thinks a single value the same as an array!!!
 			{
-				isw = lcApi.getInputStreamSynchronized(queryWithOffset, "GET");
-			    vb = objectMapper.readValue(isw.getIs(), VendorBean.class);
+			    //result = service.lcProxy(input);
+	     		//LcApiCaller lcApiCaller = new LcApiCaller(queryWithOffset);
+		    	result = lcApiCaller.get();
+			    vb = objectMapper.readValue(result, VendorBean.class);
 				if (vb.getAttribute().getCount() != 0)
 					vendors.add(vb.getVendor());
 			    return vendors;
@@ -74,13 +77,13 @@ public class VendorsLcApiCaller extends LcApiCaller<Vendor>
 			return this;
 		}
 
-		public VendorsLcApiCaller build()
+		public VendorsCaller build()
 		{
-			return new VendorsLcApiCaller(this);
+			return new VendorsCaller(this);
 		}
 	}
 
-	private VendorsLcApiCaller(Builder builder)
+	private VendorsCaller(Builder builder)
 	{
 		this.query = builder.query;
 	}
