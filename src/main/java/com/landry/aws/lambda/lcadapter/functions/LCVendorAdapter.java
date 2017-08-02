@@ -5,15 +5,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.List;
 
-import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
-import com.amazonaws.services.lambda.invoke.LambdaInvokerFactory;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.landry.aws.lambda.common.invoker.DueDateInvoker;
-import com.landry.aws.lambda.common.model.DueDateInput;
 import com.landry.aws.lambda.common.model.LCVendorAdapterInput;
 import com.landry.aws.lambda.common.util.LambdaFunctions;
-import com.landry.aws.lambda.common.util.MyConstants;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeDAO;
 import com.landry.aws.lambda.dynamo.dao.DynamoVendorShipTimeSupportDAO;
 import com.landry.aws.lambda.dynamo.domain.VendorShipTimeSupport;
@@ -52,7 +47,8 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 		String currentTimeStampString = ZonedDateTime.now()
 				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX"));
 
-		logger.debug("This is the last time we called LC: " + currentTimeStampString);
+		logger.info("This is the current timestamp: " + currentTimeStampString);
+		logger.info("This is the last time we called LC: " + lastGet.getTimestamp());
 
 		if (lastGet != null && maxData != null)
 		{
@@ -67,7 +63,7 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 			logger.info("Got " + vendors.size() + " vendors that have changed since"  + lastGet.getTimestamp());
 
 			// First lets persist the timestamp to be used in the next call to LC
-			logger.debug("Persisting new timestamp: " + currentTimeStampString);
+			logger.info("Persisting new timestamp: " + currentTimeStampString);
 			writeTimestampToDynamo(currentTimeStampString);
 
 			// Next lets see if we have anything new to update
@@ -75,28 +71,17 @@ public class LCVendorAdapter implements RequestHandler<LCVendorAdapterInput, Str
 			{
 				Long nextVSTId = maxData.getId().longValue();
 				nextVSTId++;
-			    logger.debug("The next vendor ship time id is: " + nextVSTId);
+			    logger.info("The next vendor ship time id is: " + nextVSTId);
 				VendorShipTimeUpdater vstu = new VendorShipTimeUpdater.Builder()
 						.vendors(vendors)
 						.nextVendorShipTimeId(nextVSTId)
 						.build();
 				vstu.doWork();
-				if (!MyConstants.TESTING)
-					if (vstu.persistedChanges())
-						reloadVSTs();
 			}
 		}
 
 		return "Done syncing changes to the VendorShipTime table from LC Vendor table.";
 
-	}
-
-	private void reloadVSTs()
-	{
-		DueDateInvoker dueDateInvoker = LambdaInvokerFactory.builder()
-				.lambdaClient(AWSLambdaClientBuilder.defaultClient()).build(DueDateInvoker.class);
-		DueDateInput ddi = new DueDateInput.Builder().reload(true).build();
-		dueDateInvoker.dueDate(ddi);
 	}
 
 	private boolean isValid( String lastGetGiven )

@@ -47,9 +47,16 @@ public class LambdaFunctionHandlerTest {
 		List<VendorShipTimeSupport> vendorShipTimeSupport = vstsDao.findAll();
 		for ( VendorShipTimeSupport vsts : vendorShipTimeSupport )
 			System.out.println(vsts);
+		
+		VendorShipTime vendorShipTime = vstDao.findById(1);
+		System.out.println(vendorShipTime);
+		
+
+		/*
 		List<VendorShipTime> vendorShipTime = vstDao.findAll();
 		for ( VendorShipTime vst : vendorShipTime )
 			System.out.println(vst);
+			*/
 	}
 
     @Test

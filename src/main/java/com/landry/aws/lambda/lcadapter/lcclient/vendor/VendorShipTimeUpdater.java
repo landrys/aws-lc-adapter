@@ -14,7 +14,6 @@ public class VendorShipTimeUpdater
 	private static final Log logger = LogFactory.getLog(VendorShipTimeUpdater.class);
 	private List<Vendor> vendors;
 	private Long nextVendorShipTimeId;
-	private boolean persistedChanges = false;
 
 	public void doWork()
 	{
@@ -30,7 +29,8 @@ public class VendorShipTimeUpdater
 				List<VendorShipTime> vsts = LCVendorAdapter.vstDao.findByVendorId(vendorId);
 				if (!vsts.isEmpty())
 				{
-					logger.info("Found " + vsts.size() + " vendor ship times to check for changes.");
+					//ouputList(vsts);
+					logger.info("Found " +  vsts.size() + " vendor ship times to check for changes.");
 					if (changed(vsts.get(0), v.getName()))
 						for (VendorShipTime vst : vsts)
 						{
@@ -50,7 +50,7 @@ public class VendorShipTimeUpdater
 					VendorShipTime vst = new VendorShipTime();
 					vst.setId(nextVendorShipTimeId);
 					vst.setVendorId(v.getId());
-					vst.setName(v.getName()==null? "No Name Given":v.getName());
+					vst.setName((v.getName()==null || v.getName().isEmpty())? "No Name Given":v.getName());
 					vst.setIsBike(false);
 					vst.setWeeklyOrder(false);
 					vst.setDropShipToStore(false);
@@ -77,6 +77,13 @@ public class VendorShipTimeUpdater
 
 	}
 
+	private void ouputList( List<VendorShipTime> vsts )
+	{
+		for (VendorShipTime vst : vsts)
+			logger.info(vst);
+		
+	}
+
 	private boolean changed( VendorShipTime vendorShipTime, String name )
 	{
 		if (vendorShipTime.getName() == null)
@@ -87,7 +94,6 @@ public class VendorShipTimeUpdater
 		} else {
 			System.out.println("Name change [from:to]:[" 
 		            + vendorShipTime.getName() + ":" + name + "]");
-			this.persistedChanges = true;
 			return true;
 		}
 	}
@@ -97,7 +103,6 @@ public class VendorShipTimeUpdater
 		if (name == null) {
 			return false;
 		} else {
-			this.persistedChanges = true;
 			return true;
 		}
 	}
@@ -129,11 +134,6 @@ public class VendorShipTimeUpdater
 	{
 		this.vendors = builder.vendors;
 		this.nextVendorShipTimeId = builder.nextVendorShipTimeId;
-	}
-
-	public boolean persistedChanges()
-	{
-		return persistedChanges;
 	}
 
 }
